@@ -75,6 +75,7 @@ def extractAttachment(msg, eml_files, output_path):
     else:
         print 'Could not process %s\t%s' % (eml_files, len(msg.get_payload()))
 
+#Reference: http://www.decalage.info/python/oletools
 def extractOLEFormat(eml_files, output_path):
     data = '__substg1.0_37010102'
     filename = olefile.OleFileIO(eml_files)
