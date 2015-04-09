@@ -37,9 +37,9 @@ def extractAttachment(msg, eml_files, output_path):
             try:
                 extractOLEFormat(eml_files, output_path)
             except IOError:
-                print 'Could not process %s. Try manual extraction.' % (eml_files)
-                print '\tHeader of file: %s\n' % (msg.get_payload()[:8])                
-
+                #print 'Could not process %s. Try manual extraction.' % (eml_files)
+                #print '\tHeader of file: %s\n' % (msg.get_payload()[:8])
+                pass
 
         elif isinstance(msg.get_payload(), list):
             count = 0
@@ -72,8 +72,8 @@ def extractAttachment(msg, eml_files, output_path):
         printIT(eml_files, magic, filename)
         # Write the payload out.
         writeFile(filename, payload, output_path)
-    else:
-        print 'Could not process %s\t%s' % (eml_files, len(msg.get_payload()))
+    #else:
+    #    print 'Could not process %s\t%s' % (eml_files, len(msg.get_payload()))
 
 #Reference: http://www.decalage.info/python/oletools
 #Reference: https://github.com/mattgwwalker/msg-extractor
