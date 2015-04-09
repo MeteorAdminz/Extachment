@@ -38,7 +38,8 @@ import stat                               #Python Standard Library - constants a
 import time
 import hashlib
 
-# check command line directory entries to valid the directories exist
+
+# check command line directory entries to validate the directories exist
 def ValidateDirectory(theDir):
 
     # Validate the path is a directory
@@ -149,7 +150,7 @@ def writeFile(filename, payload, output_path):
 def writeOLE(filename, payload, output_path):
     open(os.path.join(output_path + filename), 'wb')
 
-#hash file and out put file stats to csv report
+#hash file and output file stats to csv report
 def HashFile(theFile, simpleName, o_result):
 
     # Verify that the path is valid
@@ -242,7 +243,7 @@ def HashFile(theFile, simpleName, o_result):
 
 # End HashFile Function ===================================
 
-
+#define class for writing csv report file
 class _CSVWriter:
 
     def __init__(self, fileName, hashType):
@@ -266,12 +267,16 @@ def main():
     parser = argparse.ArgumentParser(description='Attempt to parse the attachment from EML messages.')
     parser.add_argument('-p', '--path', type= ValidateDirectory, required=True, help='Path to EML files.')
     parser.add_argument('-o', '--out', type= ValidateDirectory, required=True, help='Path to write attachments to.')
+    
+    #add options for hashing the attachments
     group = parser.add_mutually_exclusive_group(required=False)
     group.add_argument('--md5',       help = 'specifies MD5 algorithm',       action='store_true')
     group.add_argument('--sha256',   help = 'specifies SHA256 algorithm',   action='store_true')   
     group.add_argument('--sha512',   help = 'specifies SHA512 algorithm',   action='store_true')          
     
+    
     global args
+    # parse hash option
     args = parser.parse_args()    
     if args.md5:
         gl_hashType = 'MD5'
@@ -282,13 +287,15 @@ def main():
     else:
         gl_hashType = "Unknown"
         
-        
+    # removed error checking here and including a function    type = ValidateDirectory 
     if args.path:
         input_path = args.path
     
     if args.out:
         output_path = args.out
-   
+        
+        
+   # create cvs instance
     oCVS = _CSVWriter(output_path +'AttachmentReport.csv', gl_hashType)
     
     for root, subdirs, files in os.walk(input_path):
