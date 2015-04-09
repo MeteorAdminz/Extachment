@@ -24,7 +24,10 @@ THE SOFTWARE.
 Author: Patrick Olsen
 Email: patrick.olsen@sysforensics.org
 Twitter: @patrickrolsen
-Version 0.2
+Version 0.3
+
+Reference: http://www.decalage.info/python/oletools
+Reference: https://github.com/mattgwwalker/msg-extractor
 '''
 import os, re
 import email
@@ -47,7 +50,10 @@ def extractAttachment(msg, eml_files, output_path):
                 payload = msg.get_payload()[count]
                 filename = payload.get_filename()
                 if filename is not None:
-                    magic = payload.get_payload(decode=True)[:4]
+                    try:
+                        magic = payload.get_payload(decode=True)[:4]
+                    except TypeError:
+                        magic = "None"                    
                     # Print the magic deader and the filename for reference.
                     printIT(eml_files, magic, filename)
                     # Write the payload out.
@@ -57,7 +63,10 @@ def extractAttachment(msg, eml_files, output_path):
     elif len(msg.get_payload()) == 2:
         payload = msg.get_payload()[1]
         filename = payload.get_filename()
-        magic = payload.get_payload(decode=True)[:4]
+        try:
+            magic = payload.get_payload(decode=True)[:4]
+        except TypeError:
+            magic = "None"
         # Print the magic deader and the filename for reference.
         printIT(eml_files, magic, filename)
         # Write the payload out.
@@ -67,7 +76,10 @@ def extractAttachment(msg, eml_files, output_path):
         attachment = msg.get_payload()[0]
         payload = attachment.get_payload()[1]
         filename = attachment.get_payload()[1].get_filename()
-        magic = payload.get_payload(decode=True)[:4]
+        try:
+            magic = payload.get_payload(decode=True)[:4]
+        except TypeError:
+            magic = "None"        
         # Print the magic deader and the filename for reference.
         printIT(eml_files, magic, filename)
         # Write the payload out.
@@ -75,8 +87,6 @@ def extractAttachment(msg, eml_files, output_path):
     #else:
     #    print 'Could not process %s\t%s' % (eml_files, len(msg.get_payload()))
 
-#Reference: http://www.decalage.info/python/oletools
-#Reference: https://github.com/mattgwwalker/msg-extractor
 def extractOLEFormat(eml_files, output_path):
     data = '__substg1.0_37010102'
     filename = olefile.OleFileIO(eml_files)
@@ -102,7 +112,10 @@ def printIT(eml_files, magic, filename):
     print 'Email Name: %s\n\tMagic: %s\n\tSaved File as: %s\n' % (eml_files, magic, filename)
 
 def writeFile(filename, payload, output_path):
-    open(os.path.join(output_path + filename), 'wb').write(payload.get_payload(decode=True))
+    try:
+        open(os.path.join(output_path + filename), 'wb').write(payload.get_payload(decode=True))
+    except TypeError:
+        pass
 
 def writeOLE(filename, payload, output_path):
     open(os.path.join(output_path + filename), 'wb')
