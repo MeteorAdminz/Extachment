@@ -24,21 +24,24 @@ THE SOFTWARE.
 Author: Patrick Olsen
 Email: patrick.olsen@sysforensics.org
 Twitter: @patrickrolsen
-Version 0.1
+Version 0.2
 '''
 import os, re
 import email
 import argparse
+import olefile
 
-def extractAttachment(msg, file_names, output_path):
-    
+def extractAttachment(msg, eml_files, output_path):
     if len(msg.get_payload()) > 2:
         if isinstance(msg.get_payload(), str):
-            print 'Could not process %s. Try manual extraction.' % (file_names)
-            print '\tHeader of file: %s\n' % (msg.get_payload()[:8])
-        
+            try:
+                extractOLEFormat(eml_files, output_path)
+            except IOError:
+                print 'Could not process %s. Try manual extraction.' % (eml_files)
+                print '\tHeader of file: %s\n' % (msg.get_payload()[:8])                
+
+
         elif isinstance(msg.get_payload(), list):
-            #try:
             count = 0
             while count < len(msg.get_payload()):
                 payload = msg.get_payload()[count]
@@ -46,7 +49,7 @@ def extractAttachment(msg, file_names, output_path):
                 if filename is not None:
                     magic = payload.get_payload(decode=True)[:4]
                     # Print the magic deader and the filename for reference.
-                    printIT(file_names, magic, filename)
+                    printIT(eml_files, magic, filename)
                     # Write the payload out.
                     writeFile(filename, payload, output_path)
                 count += 1
@@ -56,7 +59,7 @@ def extractAttachment(msg, file_names, output_path):
         filename = payload.get_filename()
         magic = payload.get_payload(decode=True)[:4]
         # Print the magic deader and the filename for reference.
-        printIT(file_names, magic, filename)
+        printIT(eml_files, magic, filename)
         # Write the payload out.
         writeFile(filename, payload, output_path)        
 
@@ -66,23 +69,48 @@ def extractAttachment(msg, file_names, output_path):
         filename = attachment.get_payload()[1].get_filename()
         magic = payload.get_payload(decode=True)[:4]
         # Print the magic deader and the filename for reference.
-        printIT(file_names, magic, filename)
+        printIT(eml_files, magic, filename)
         # Write the payload out.
         writeFile(filename, payload, output_path)
     else:
-        print 'Could not process %s\t%s' % (file_names, len(msg.get_payload()))  
+        print 'Could not process %s\t%s' % (eml_files, len(msg.get_payload()))
 
-def printIT(file_names, magic, filename):
-    print 'Email Name: %s\n\tMagic: %s\n\tSaved File as: %s\n' % (file_names, magic, filename)
-    
+def extractOLEFormat(eml_files, output_path):
+    data = '__substg1.0_37010102'
+    filename = olefile.OleFileIO(eml_files)
+    msg = olefile.OleFileIO(eml_files)
+    attachmentDirs = []
+    for directories in msg.listdir():
+        if directories[0].startswith('__attach') and directories[0] not in attachmentDirs:
+            attachmentDirs.append(directories[0])
+
+    for dir in attachmentDirs:
+        filename = [dir, data]
+        if isinstance(filename, list):
+            filenames = "/".join(filename)
+            filename = msg.openstream(dir + '/' + '__substg1.0_3707001F').read().replace('\000', '')
+            payload = msg.openstream(filenames).read()
+            magic = payload[:4]
+            # Print the magic deader and the filename for reference.
+            printIT(eml_files, magic, filename)
+            # Write the payload out.
+            writeOLE(filename, payload, output_path)
+
+def printIT(eml_files, magic, filename):
+    print 'Email Name: %s\n\tMagic: %s\n\tSaved File as: %s\n' % (eml_files, magic, filename)
+
 def writeFile(filename, payload, output_path):
     open(os.path.join(output_path + filename), 'wb').write(payload.get_payload(decode=True))
-    
+
+def writeOLE(filename, payload, output_path):
+    open(os.path.join(output_path + filename), 'wb')
+
 def main():
     parser = argparse.ArgumentParser(description='Attempt to parse the attachment from EML messages.')
     parser.add_argument('-p', '--path', help='Path to EML files.')
     parser.add_argument('-o', '--out', help='Path to write attachments to.')
     args = parser.parse_args()    
+
     if args.path:
         input_path = args.path
     else:
@@ -94,12 +122,12 @@ def main():
     else:
         print "You need to specify a path to write your attachments to."
         exit(0)
-    
+
     for root, subdirs, files in os.walk(input_path):
         for file_names in files:
             eml_files = os.path.join(root, file_names)
             msg = email.message_from_file(open(eml_files))
-            extractAttachment(msg, file_names, output_path)
-                
+            extractAttachment(msg, eml_files, output_path)
+
 if __name__ == "__main__":
     main()
