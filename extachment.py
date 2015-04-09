@@ -38,6 +38,7 @@ import stat                               #Python Standard Library - constants a
 import time
 import hashlib
 
+# check command line directory entries to valid the directories exist
 def ValidateDirectory(theDir):
 
     # Validate the path is a directory
@@ -148,6 +149,7 @@ def writeFile(filename, payload, output_path):
 def writeOLE(filename, payload, output_path):
     open(os.path.join(output_path + filename), 'wb')
 
+#hash file and out put file stats to csv report
 def HashFile(theFile, simpleName, o_result):
 
     # Verify that the path is valid
