@@ -115,8 +115,9 @@ def printIT(eml_files, magic, filename):
 
 def writeFile(filename, payload, output_path):
     try:
-        open(os.path.join(output_path + filename), 'wb').write(payload.get_payload(decode=True))
-    except TypeError:
+        file_location = output_path + filename
+        open(os.path.join(file_location), 'wb').write(payload.get_payload(decode=True))
+    except (TypeError, IOError):
         pass
 
 def writeOLE(filename, payload, output_path):
